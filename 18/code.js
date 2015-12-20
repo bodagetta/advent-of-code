@@ -1,3 +1,4 @@
+var plotly = require('plotly')("michaelwhitley", "bg5lkec7yn")
 var fs = require('fs');
 
 var filename = 'input.txt';
@@ -7,6 +8,10 @@ var maxRow = 0;
 var maxCol = 0;
 
 var time = {};
+
+var grid = [];
+
+var plotting = false;
 
 function getLight(x,y) {
 
@@ -87,6 +92,58 @@ function assembleLights() {
 	}
 }
 
+function plot(index) {
+
+	plotting = true;
+
+	var grid = [];
+
+	for (var row of lights) {
+		var rowLight = [];
+		for (var light of row) {
+			if(light.isOn) {
+				rowLight.push(1);
+			}
+			else {
+				rowLight.push(0);
+			}
+		}
+		grid.push(rowLight);
+	}
+
+	var data = [
+	  {
+	    z: grid,
+	    type: "heatmap"
+	  }
+	];
+	var graphOptions = {filename: "basic-heatmap", fileopt: "overwrite", title: "Advent Of Code - Day 6: Probably a Fire Hazard Part 2"};
+	plotly.plot(data, graphOptions, function (err, msg) {
+	    //console.log(msg);
+
+	    // grab the figure from an existing plot
+		plotly.getFigure('michaelwhitley', '511', function (err, figure) {
+		    if (err) return console.log(err);
+		    console.log("get figure done");
+
+		    var imgOpts = {
+		        format: 'png',
+		        width: 500,
+		        height: 500
+		    };
+
+		    plotly.getImage(figure, imgOpts, function (error, imageStream) {
+		        if (error) return console.log (error);
+
+		        var fileStream = fs.createWriteStream( index + '.png');
+		        imageStream.pipe(fileStream);
+		        plotting = false;
+		        console.log("plot done");
+		    });
+		});
+	});
+}
+
 function switchState() {
 	for(var row of lights) {
 		for(var light of row) {
@@ -98,6 +155,8 @@ function switchState() {
 
 function showFrames(frames) {
 	for(var i = 0; i < frames; i++) {
+		while(plotting);
+		plot(i);
 		var now = new Date();
 		var timeElapsed = (now - time.lap) / 1000;
 		time.lap = now;
@@ -160,6 +219,7 @@ fs.readFile(filename, 'utf8', function(err, data) {
 
 	assembleLights();
 	showFrames(100);
+	plot();
 	var lightsOn = countLights();
 	time.stop = new Date();
 
