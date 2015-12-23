@@ -27,10 +27,18 @@ var spells = [
 
 function applyEffect(a, d, e) {
 
+	if(e.time === 6) {
+		a.armor += e.armor;
+	}
+
 	if(e.time > 0) {
 		d.hp -= e.damage;
-		a.armor += e.armor;
 		a.mana += e.mana;
+		e.time -= 1;
+	}
+	else if (e.time === 0) {
+		//Remove armor 
+		a.armor -= e.armor;
 		e.time -= 1;
 	}
 	return e;
@@ -52,6 +60,16 @@ function addEffect(a, e) {
 }
 
 function takeRound(attacker, defender, spell) {
+
+	//Part Two
+	if(spell) {
+		//we are on hard level
+		attacker.hp -= 1;
+		if(attacker.hp <= 0) {
+			return true;
+		}
+	}
+	//End part two
 
 	//Apply Effect from Attacker
 	for(effect of attacker.effects) {
@@ -149,74 +167,7 @@ var winners = [];
 var losers = [];
 var undecided = [];
 
-// var p = new player();
-// var b = new boss();
-
-// if(runSpell(p,b,spells[3])) {
-// 	console.log('1');
-// }
-
-// if(runSpell(p,b,spells[0])) {
-// 	console.log('2');
-// }
-
-// console.log(winners);
-
-// for (var i = 0; i < spells.length; i++) {
-// 	for (var j = 0; j < spells.length; j++) {
-// 		console.log(i + ", " + j);
-// 		var p = new player();
-//  		var b = new boss();
-// 		if(runSpell(p,b,spells[i])) {
-// 			continue;
-// 		}
-
-// 		if(runSpell(p,b,spells[j])) {
-// 			continue;
-// 		}
-		
-// 		console.log(i + ", " + j);
-// 	}
-// }
-
-
-// for (var i = 0; i < spells.length; i++) {
-// 	for (var j = 0; j < spells.length; j++) {
-// 		for (var k = 0; k < spells.length; k++) {
-// 			for (var l = 0; l < spells.length; l++) {
-// 				for (var m = 0; m < spells.length; m++) {
-// 					var p = new player();
-// 					var b = new boss();
-
-// 					if(runSpell(p,b,spells[i])) {
-// 						continue;
-// 					}
-
-// 					if(runSpell(p,b,spells[j])) {
-// 						continue;
-// 					}
-
-// 					if(runSpell(p,b,spells[k])) {
-// 						continue;
-// 					}
-
-// 					if(runSpell(p,b,spells[l])) {
-// 						continue;
-// 					}
-
-// 					if(runSpell(p,b,spells[m])) {
-// 						continue;
-// 					}
-
-// 					console.log('no outcome');
-// 					console.log(p);
-					
-					
-// 				}
-// 			}
-// 		}
-// 	}
-// }
+var runtime = {start: new Date()}
 
 for(var i = 0; i < spells.length; i++) {
 
@@ -230,9 +181,30 @@ for(var i = 0; i < spells.length; i++) {
 
 }
 
-var count = 0;
+function printAnswer() {
+	runtime.stop = new Date();
+
+
+	winners.sort(function(a,b){
+		return a.manaSpent - b.manaSpent;
+	});
+
+	console.log(((runtime.stop - runtime.start) / 1000) + " seconds");
+
+	console.log("Winners: " + winners.length);
+	console.log("Losers: " + losers.length);
+	console.log("Undecided: " + undecided.length);
+	console.log("Winner");
+	console.log(winners[0]);
+}
 
 while(undecided.length > 0) {
+	console.log("while loop " + undecided.length);
+
+	if(undecided.length > 40000) {
+		printAnswer();
+		process.exit(0);
+	}
 
 
 	for(var i = 0; i < undecided.length; i++) {
@@ -240,7 +212,6 @@ while(undecided.length > 0) {
 		var start = undecided.length;
 
 		for(var j = 0; j < spells.length; j++) {
-			count++;
 
 			var clonedPlayer = JSON.parse(JSON.stringify(undecided[i].player));
 			var clonedBoss = JSON.parse(JSON.stringify(undecided[i].boss));
@@ -253,20 +224,7 @@ while(undecided.length > 0) {
 				undecided.push({player: p, boss: b}); 
 			}
 
-			if(count > 400000) {
-				winners.sort(function(a,b){
-					return a.manaSpent - b.manaSpent;
-				});
-
-				console.log(winners.length);
-				console.log(losers.length);
-				console.log(undecided.length);
-				console.log(winners[0]);
-				console.log("early abort");
-				process.exit(0);
-			}
 		}
-		//console.log(undecided.length - start);
 
 		//Exhausted all possibilities of next spell for this element, remove it
 		undecided.splice(i,1);
@@ -274,13 +232,8 @@ while(undecided.length > 0) {
 
 }
 
-winners.sort(function(a,b){
-	return a.manaSpent - b.manaSpent;
-});
+printAnswer();
 
-console.log(winners.length);
-console.log(losers.length);
-console.log(undecided.length);
-console.log(winners[0]);
-// console.log(losers[0].spells);
+
+
 
