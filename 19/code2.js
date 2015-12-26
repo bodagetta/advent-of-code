@@ -26,23 +26,28 @@ function addMolecule(molecule) {
 	newMolecules.push(molecule);
 }
 
-function findMatches() {
+function findMatches(molecule) {
+	var count = 0;
 
 	for(var r of replacements) {
-		var regex = new RegExp(r[1], 'g');
+		var regex = new RegExp(r[1], '');
 
-		while(matches = regex.exec(starting)) {
-			matches.replacement = r[0];
-			executeReplacement(matches);
-			possibleReplacements.push(matches);
+		var newM = molecule.replace(regex, r[0]);
+
+		if(newM != molecule) {
+			count++;
 		}
 
+		molecule = newM;
+
 	}
+
+	return [molecule, count];
 	
 }
 
-function executeReplacement(r) {
-	var split = starting.split('');
+function executeReplacement(r, molecule) {
+	var split = molecule.split('');
 
 	for(var i = 0; i < r[0].length; i++){
 		split[r.index + i] = '';
@@ -51,22 +56,14 @@ function executeReplacement(r) {
 	split[r.index] = r.replacement;
 
 
-	starting = split.join('');
+	molecule = split.join('');
 
-	split = starting.split('');
-		for(var s of split) {
-			if(s != 'e') {
-				console.log(starting);
-				steps++;
-				return;
-			}
-		}
+	return molecule;
 
-	console.log("Steps: " + steps);
-	process.exit(0);
+}
 
-
- 
+function rotateReplacements() {
+	replacements.unshift(replacements.pop());
 }
 
 fs.readFile(filename, 'utf8', function(err, data) {
@@ -77,11 +74,25 @@ fs.readFile(filename, 'utf8', function(err, data) {
 			replacements.push([split[0].trim(), split[1].trim()]);
 		}
 	}
-	while(true) {
-		findMatches();
+
+	while(mutated != "e") {
+		var mutated = starting;
+		var lastMutation = "";
+		var steps = 0;
+
+		while(mutated != lastMutation) {
+			lastMutation = mutated;
+			result = findMatches(mutated)
+			mutated = result[0];
+			steps = steps + result[1];
+		}
+		console.log(mutated);
+		console.log("--");
+		console.log("Mutations: " + steps);
+		rotateReplacements();
+
 	}
 	
-	console.log(starting);
 });
 
 
